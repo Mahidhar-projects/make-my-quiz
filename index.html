@@ -1,0 +1,1280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Make My Quiz</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- jsPDF CDN for PDF generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <!-- Tone.js CDN for sound effects -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.min.js"></script>
+    <style>
+        /* Custom font for Inter */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Basic styling for the loading spinner */
+        .animate-spin {
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        /* Modal Overlay */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        /* Modal Content */
+        .modal-content {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 0.75rem;
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+        }
+
+        /* Custom arrow for select dropdown */
+        .select-with-custom-arrow {
+            /* SVG for a simple down arrow */
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='currentColor'%3E%3Cpath fill-rule='evenodd' d='M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z' clip-rule='evenodd' /%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 0.75rem center; /* Position the arrow */
+            background-size: 1.5em 1.5em; /* Size of the arrow */
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-purple-600 to-indigo-800 flex items-center justify-center p-4">
+
+    <div id="app" class="bg-white rounded-xl shadow-2xl p-8 w-full max-w-2xl transform transition-all duration-300 ease-in-out hover:scale-105">
+        <h1 class="text-4xl font-extrabold text-center text-gray-900 mb-8">
+            Make My Quiz
+        </h1>
+
+        <!-- Initial state: Topic and number of questions input -->
+        <div id="quiz-setup" class="text-center">
+            <p class="text-gray-700 text-lg mb-6">
+                Enter a topic, upload an image, or both! Then choose quiz settings.
+            </p>
+            <input
+                type="text"
+                id="quiz-topic-input"
+                class="w-full p-4 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-4 focus:ring-indigo-500 focus:border-transparent text-lg mb-4 shadow-sm"
+                placeholder="e.g., 'World History', 'Science', 'Pop Culture'"
+            />
+            <div class="w-full mb-4">
+                <label for="image-upload-input" class="block text-left text-gray-700 text-sm font-medium mb-2">Upload Image (Optional):</label>
+                <input
+                    type="file"
+                    id="image-upload-input"
+                    accept="image/*"
+                    class="w-full p-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-4 focus:ring-indigo-500 focus:border-transparent text-lg shadow-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-violet-50 file:text-violet-700 hover:file:bg-violet-100"
+                />
+                <div id="image-preview-container" class="mt-4 hidden">
+                    <img id="image-preview" src="#" alt="Image Preview" class="max-w-full h-auto rounded-lg shadow-md mx-auto" style="max-height: 200px;">
+                    <p id="image-file-name" class="text-gray-600 text-sm mt-2"></p>
+                </div>
+            </div>
+
+            <input
+                type="number"
+                id="num-questions-input"
+                class="w-full p-4 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-4 focus:ring-indigo-500 focus:border-transparent text-lg mb-4 shadow-sm"
+                placeholder="Number of questions (default: 5)"
+                value="5"
+                min="1"
+            />
+            <select
+                id="quiz-level-select"
+                class="w-full p-4 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-4 focus:ring-indigo-500 focus:border-transparent text-lg mb-4 shadow-sm appearance-none bg-white pr-8 select-with-custom-arrow"
+            >
+                <option value="mixed">Choose a level</option>
+                <option value="easy">Easy</option>
+                <option value="medium">Medium</option>
+                <option value="advanced">Advanced</option>
+            </select>
+            <select
+                id="quiz-type-select"
+                class="w-full p-4 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-4 focus:ring-indigo-500 focus:border-transparent text-lg mb-6 shadow-sm appearance-none bg-white pr-8 select-with-custom-arrow"
+            >
+                <!-- New default option for user to select an answer type -->
+                <option value="" disabled selected>Choose Answer Type</option>
+                <option value="multiple-choice-4">Multiple Choice (4 Options)</option>
+                <option value="multiple-choice-3">Multiple Choice (3 Options)</option>
+                <option value="multiple-choice-2">Multiple Choice (2 Options)</option>
+                <option value="direct-answer">Direct Answer</option>
+                <option value="true-false">True or False</option> <!-- New True/False option -->
+            </select>
+            <button
+                id="generate-quiz-button"
+                class="w-full bg-indigo-600 text-white py-4 px-6 rounded-lg text-xl font-semibold hover:bg-indigo-700 transition duration-300 ease-in-out shadow-lg transform hover:scale-105 mb-4"
+            >
+                Generate Quiz
+            </button>
+            <button
+                id="generate-pdf-button"
+                class="w-full bg-red-600 text-white py-4 px-6 rounded-lg text-xl font-semibold hover:bg-red-700 transition duration-300 ease-in-out shadow-lg transform hover:scale-105"
+            >
+                Generate Quiz in PDF
+            </button>
+            <p id="error-message" class="text-red-600 mt-4 text-md font-medium hidden"></p>
+        </div>
+
+        <!-- Loading state -->
+        <div id="loading-state" class="text-center py-10 hidden">
+            <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-indigo-500 mx-auto mb-4"></div>
+            <p class="text-gray-700 text-xl font-semibold">Generating your quiz...</p>
+        </div>
+
+        <!-- Quiz display area -->
+        <div id="quiz-display" class="quiz-container hidden">
+            <!-- Question and score will be inserted here by JavaScript -->
+            <div class="flex justify-between items-center mb-6">
+                <p id="question-counter" class="text-gray-600 text-lg font-medium">Question 1 of 5</p>
+                <p id="score-display" class="text-gray-600 text-lg font-medium">Score: 0</p>
+            </div>
+            <h2 id="question-text" class="text-2xl font-bold text-gray-800 mb-6 leading-relaxed"></h2>
+            <div id="options-container" class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                </div>
+
+            <p id="feedback-message" class="text-center text-xl font-semibold mb-6 mt-4 hidden"></p>
+            
+            <button
+                id="next-question-button"
+                class="w-full bg-blue-600 text-white py-3 px-6 rounded-lg text-lg font-semibold hover:bg-blue-700 transition duration-300 ease-in-out shadow-md transform hover:scale-105 hidden"
+            >
+                Next Question
+            </button>
+
+            <div id="llm-features" class="mt-6 space-y-4 hidden">
+                <div class="flex flex-col md:flex-row gap-4">
+                    <button
+                        id="explain-answer-button"
+                        class="flex-1 bg-purple-500 text-white py-3 px-6 rounded-lg text-lg font-semibold hover:bg-purple-600 transition duration-300 ease-in-out shadow-md transform hover:scale-105"
+                    >
+                        Explain Answer ✨
+                    </button>
+                    <button
+                        id="get-fun-fact-button"
+                        class="flex-1 bg-teal-500 text-white py-3 px-6 rounded-lg text-lg font-semibold hover:bg-teal-600 transition duration-300 ease-in-out shadow-md transform hover:scale-105"
+                    >
+                        Get Fun Fact ✨
+                    </button>
+                </div>
+                <div id="explanation-loading" class="text-center py-2 hidden">
+                    <div class="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-purple-400 mx-auto"></div>
+                    <p class="text-gray-600 text-sm mt-2">Generating explanation...</p>
+                </div>
+                <div id="explanation-output" class="bg-blue-50 p-4 rounded-lg border border-blue-200 text-gray-800 text-base hidden"></div>
+
+                <div id="fun-fact-loading" class="text-center py-2 hidden">
+                    <div class="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-teal-400 mx-auto"></div>
+                    <p class="text-gray-600 text-sm mt-2">Generating fun fact...</p>
+                </div>
+                <div id="fun-fact-output" class="bg-green-50 p-4 rounded-lg border border-green-200 text-gray-800 text-base hidden"></div>
+            </div>
+        </div>
+
+        <div id="quiz-completed" class="text-center hidden">
+            <h2 class="text-3xl font-bold text-gray-800 mb-4">Quiz Completed!</h2>
+            <p class="text-2xl text-gray-700 mb-6">
+                Your final score is: <span id="final-score" class="font-extrabold text-indigo-600">0 / 0</span>
+            </p>
+            <div class="flex flex-col md:flex-row gap-4 mb-6">
+                <button
+                    id="review-quiz-button"
+                    class="flex-1 bg-yellow-500 text-white py-4 px-6 rounded-lg text-xl font-semibold hover:bg-yellow-600 transition duration-300 ease-in-out shadow-lg transform hover:scale-105"
+                >
+                    Review Quiz
+                </button>
+                <button
+                    id="extract-review-pdf-button"
+                    class="flex-1 bg-red-600 text-white py-4 px-6 rounded-lg text-xl font-semibold hover:bg-red-700 transition duration-300 ease-in-out shadow-lg transform hover:scale-105"
+                >
+                    Extract review as PDF
+                </button>
+            </div>
+            <button
+                id="extract-quiz-only-pdf-button"
+                class="w-full bg-red-500 text-white py-4 px-6 rounded-lg text-xl font-semibold hover:bg-red-600 transition duration-300 ease-in-out shadow-lg transform hover:scale-105 mt-4"
+            >
+                Extract quiz as PDF
+            </button>
+            <button
+                id="start-new-quiz-button"
+                class="w-full bg-green-600 text-white py-4 px-6 rounded-lg text-xl font-semibold hover:bg-green-700 transition duration-300 ease-in-out shadow-lg transform hover:scale-105 mt-4"
+            >
+                Start New Quiz
+            </button>
+        </div>
+
+        <div id="quiz-review-display" class="quiz-container hidden">
+            <h2 class="text-3xl font-bold text-gray-800 mb-6 text-center">Quiz Review</h2>
+            <div id="review-questions-container" class="space-y-8">
+                </div>
+            <button
+                id="back-to-new-quiz-button"
+                class="w-full bg-green-600 text-white py-4 px-6 rounded-lg text-xl font-semibold hover:bg-green-700 transition duration-300 ease-in-out shadow-lg transform hover:scale-105 mt-8"
+            >
+                Start New Quiz
+            </button>
+        </div>
+
+    </div>
+
+    <!-- PDF Confirmation Modal -->
+    <div id="pdf-confirm-modal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <h3 class="2xl font-bold text-gray-800 mb-4">Include Correct Answers?</h3>
+            <p class="text-gray-700 text-lg mb-6">
+                Do you want to include the correct answers after each question in the PDF?
+            </p>
+            <div class="flex justify-center gap-4">
+                <button
+                    id="confirm-pdf-yes"
+                    class="bg-green-600 text-white py-3 px-6 rounded-lg text-lg font-semibold hover:bg-green-700 transition duration-300 ease-in-out shadow-md"
+                >
+                    Yes
+                </button>
+                <button
+                    id="confirm-pdf-no"
+                    class="bg-blue-600 text-white py-3 px-6 rounded-lg text-lg font-semibold hover:bg-blue-700 transition duration-300 ease-in-out shadow-md"
+                >
+                    No
+                </button>
+                <button
+                    id="confirm-pdf-cancel"
+                    class="bg-gray-400 text-white py-3 px-6 rounded-lg text-lg font-semibold hover:bg-gray-500 transition duration-300 ease-in-out shadow-md"
+                >
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Import jsPDF from the global window object
+        const { jsPDF } = window.jspdf;
+        // Import Tone from the global window object
+        const Tone = window.Tone;
+
+        // DOM Elements
+        const quizSetupDiv = document.getElementById('quiz-setup');
+        const loadingStateDiv = document.getElementById('loading-state');
+        const quizDisplayDiv = document.getElementById('quiz-display');
+        const quizCompletedDiv = document.getElementById('quiz-completed');
+        const quizReviewDisplayDiv = document.getElementById('quiz-review-display');
+
+        const quizTopicInput = document.getElementById('quiz-topic-input');
+        const imageUploadInput = document.getElementById('image-upload-input');
+        const imagePreviewContainer = document.getElementById('image-preview-container');
+        const imagePreview = document.getElementById('image-preview');
+        const imageFileNameDisplay = document.getElementById('image-file-name');
+
+        const numQuestionsInput = document.getElementById('num-questions-input');
+        const quizLevelSelect = document.getElementById('quiz-level-select');
+        const quizTypeSelect = document.getElementById('quiz-type-select');
+        const generateQuizButton = document.getElementById('generate-quiz-button');
+        const generatePdfButton = document.getElementById('generate-pdf-button');
+        const errorMessage = document.getElementById('error-message');
+
+        const questionCounter = document.getElementById('question-counter');
+        const scoreDisplay = document.getElementById('score-display');
+        const questionText = document.getElementById('question-text');
+        const optionsContainer = document.getElementById('options-container');
+        const feedbackMessage = document.getElementById('feedback-message');
+        const nextQuestionButton = document.getElementById('next-question-button');
+        const finalScoreDisplay = document.getElementById('final-score');
+        const reviewQuizButton = document.getElementById('review-quiz-button');
+        const extractReviewPdfButton = document.getElementById('extract-review-pdf-button');
+        const extractQuizOnlyPdfButton = document.getElementById('extract-quiz-only-pdf-button');
+        const startNewQuizButton = document.getElementById('start-new-quiz-button');
+        const backToNewQuizButton = document.getElementById('back-to-new-quiz-button');
+        const reviewQuestionsContainer = document.getElementById('review-questions-container');
+
+        // LLM Feature DOM Elements
+        const llmFeaturesDiv = document.getElementById('llm-features');
+        const explainAnswerButton = document.getElementById('explain-answer-button');
+        const getFunFactButton = document.getElementById('get-fun-fact-button');
+        const explanationLoading = document.getElementById('explanation-loading');
+        const explanationOutput = document.getElementById('explanation-output');
+        const funFactLoading = document.getElementById('fun-fact-loading');
+        const funFactOutput = document.getElementById('fun-fact-output');
+
+        // PDF Confirmation Modal Elements
+        const pdfConfirmModal = document.getElementById('pdf-confirm-modal');
+        const confirmPdfYesButton = document.getElementById('confirm-pdf-yes');
+        const confirmPdfNoButton = document.getElementById('confirm-pdf-no');
+        const confirmPdfCancelButton = document.getElementById('confirm-pdf-cancel');
+
+
+        // State variables
+        let quizTopic = '';
+        let uploadedImageBase64 = null;
+        let imageFileName = '';
+        let numQuestions = 5;
+        let quizLevel = 'mixed';
+        let quizType = ''; // Changed default to empty string
+        let numOptions = 4;
+        let questions = []; // Stores the generated quiz questions
+        let userAnswers = [];
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let selectedOption = null;
+
+        // Tone.js Synths for sound effects
+        const correctSynth = new Tone.Synth().toDestination();
+        const incorrectSynth = new Tone.NoiseSynth({
+            noise: { type: "pink" },
+            envelope: { attack: 0.005, decay: 0.1, sustain: 0.05, release: 0.2 }
+        }).toDestination();
+        const completionSynth = new Tone.PolySynth(Tone.Synth, {
+            oscillator: { type: "sine" }
+        }).toDestination();
+
+        // Function to play sound effects
+        async function playCorrectSound() {
+            await Tone.start(); // Start Tone.js context on first interaction
+            correctSynth.triggerAttackRelease("C5", "8n");
+        }
+
+        async function playIncorrectSound() {
+            await Tone.start(); // Start Tone.js context on first interaction
+            incorrectSynth.triggerAttackRelease("16n");
+        }
+
+        async function playCompletionSound() {
+            await Tone.start(); // Start Tone.js context on first interaction
+            const now = Tone.now();
+            completionSynth.triggerAttackRelease(["C4", "E4", "G4", "C5"], "2n", now);
+        }
+
+
+        // Function to show/hide sections of the app
+        function showSection(section) {
+            quizSetupDiv.classList.add('hidden');
+            loadingStateDiv.classList.add('hidden');
+            quizDisplayDiv.classList.add('hidden');
+            quizCompletedDiv.classList.add('hidden');
+            quizReviewDisplayDiv.classList.add('hidden');
+            pdfConfirmModal.classList.add('hidden'); // Ensure modal is hidden
+
+            section.classList.remove('hidden');
+        }
+
+        /**
+         * Fetches quiz questions from the Gemini API based on current settings.
+         * @returns {Promise<Array|null>} A promise that resolves to an array of questions or null if generation fails.
+         */
+        async function fetchQuizQuestions() {
+            quizTopic = quizTopicInput.value.trim();
+            numQuestions = parseInt(numQuestionsInput.value);
+            quizLevel = quizLevelSelect.value;
+            quizType = quizTypeSelect.value; // Get current selected value
+
+            if (!quizTopic && !uploadedImageBase64) {
+                errorMessage.textContent = 'Please enter a quiz topic or upload an image.';
+                errorMessage.classList.remove('hidden');
+                return null;
+            }
+            if (numQuestions <= 0 || isNaN(numQuestions)) {
+                errorMessage.textContent = 'Please enter a valid number of questions (greater than 0).';
+                errorMessage.classList.remove('hidden');
+                return null;
+            }
+            // New check: ensure a quiz type is selected
+            if (quizType === "") {
+                errorMessage.textContent = 'Please select an Answer Type.';
+                errorMessage.classList.remove('hidden');
+                return null;
+            }
+
+
+            errorMessage.classList.add('hidden');
+
+            // Determine numOptions based on quizType
+            if (quizType.startsWith('multiple-choice')) {
+                numOptions = parseInt(quizType.split('-')[2]);
+            } else if (quizType === 'true-false') { // Handle true-false specifically
+                numOptions = 2;
+            }
+            else {
+                numOptions = 0; // Not applicable for direct answer
+            }
+
+            let promptText = '';
+            let contents = [];
+            let responseSchema = {};
+
+            if (uploadedImageBase64) {
+                if (quizType === 'direct-answer') {
+                    promptText = `Generate a ${numQuestions}-question quiz about the attached image with a difficulty level of "${quizLevel}". Each question should require a direct, concise answer. Provide the output as a JSON array of objects, where each object has "question" and "correctAnswer" (the exact string of the correct answer).`;
+                    responseSchema = {
+                        type: "ARRAY",
+                        items: {
+                            type: "OBJECT",
+                            properties: {
+                                "question": { "type": "STRING" },
+                                "correctAnswer": { "type": "STRING" }
+                            },
+                            "propertyOrdering": ["question", "correctAnswer"]
+                        }
+                    };
+                } else if (quizType === 'true-false') {
+                    promptText = `Generate a ${numQuestions}-question true or false quiz about the attached image with a difficulty level of "${quizLevel}". Provide the output as a JSON array of objects, where each object has "question" and "correctAnswer" (either "True" or "False").`;
+                    responseSchema = {
+                        type: "ARRAY",
+                        items: {
+                            type: "OBJECT",
+                            properties: {
+                                "question": { "type": "STRING" },
+                                "correctAnswer": { "type": "STRING", "enum": ["True", "False"] }
+                            },
+                            "propertyOrdering": ["question", "correctAnswer"]
+                        }
+                    };
+                }
+                else {
+                    promptText = `Generate a ${numQuestions}-question multiple-choice quiz about the attached image with a difficulty level of "${quizLevel}". Each question should have exactly ${numOptions} options and specify the correct answer. Provide the output as a JSON array of objects, where each object has "question", "options" (an array of strings), and "correctAnswer" (the exact string of the correct option).`;
+                    responseSchema = {
+                        type: "ARRAY",
+                        items: {
+                            type: "OBJECT",
+                            properties: {
+                                "question": { "type": "STRING" },
+                                "options": {
+                                    "type": "ARRAY",
+                                    "minItems": numOptions,
+                                    "maxItems": numOptions,
+                                    "items": { "type": "STRING" }
+                                },
+                                "correctAnswer": { "type": "STRING" }
+                            },
+                            "propertyOrdering": ["question", "options", "correctAnswer"]
+                        }
+                    };
+                }
+                contents.push({
+                    role: "user",
+                    parts: [
+                        { text: promptText },
+                        {
+                            inlineData: {
+                                mimeType: "image/png", // Assuming PNG, adjust if needed
+                                data: uploadedImageBase64
+                            }
+                        }
+                    ]
+                });
+            } else {
+                if (quizType === 'direct-answer') {
+                    promptText = `Generate a ${numQuestions}-question quiz about "${quizTopic}" with a difficulty level of "${quizLevel}". Each question should require a direct, concise answer. Provide the output as a JSON array of objects, where each object has "question" and "correctAnswer" (the exact string of the correct answer).`;
+                    responseSchema = {
+                        type: "ARRAY",
+                        items: {
+                            type: "OBJECT",
+                            properties: {
+                                "question": { "type": "STRING" },
+                                "correctAnswer": { "type": "STRING" }
+                            },
+                            "propertyOrdering": ["question", "correctAnswer"]
+                        }
+                    };
+                } else if (quizType === 'true-false') {
+                    promptText = `Generate a ${numQuestions}-question true or false quiz about "${quizTopic}" with a difficulty level of "${quizLevel}". Provide the output as a JSON array of objects, where each object has "question" and "correctAnswer" (either "True" or "False").`;
+                    responseSchema = {
+                        type: "ARRAY",
+                        items: {
+                            type: "OBJECT",
+                            properties: {
+                                "question": { "type": "STRING" },
+                                "correctAnswer": { "type": "STRING", "enum": ["True", "False"] }
+                            },
+                            "propertyOrdering": ["question", "correctAnswer"]
+                        }
+                    };
+                }
+                else {
+                    numOptions = parseInt(quizType.split('-')[2]);
+                    promptText = `Generate a ${numQuestions}-question multiple-choice quiz about "${quizTopic}" with a difficulty level of "${quizLevel}". Each question should have exactly ${numOptions} options and specify the correct answer. Provide the output as a JSON array of objects, where each object has "question", "options" (an array of strings), and "correctAnswer" (the exact string of the correct option).`;
+                    responseSchema = {
+                        type: "ARRAY",
+                        items: {
+                            type: "OBJECT",
+                            properties: {
+                                "question": { "type": "STRING" },
+                                "options": {
+                                    "type": "ARRAY",
+                                    "minItems": numOptions,
+                                    "maxItems": numOptions,
+                                    "items": { "type": "STRING" }
+                                },
+                                "correctAnswer": { "type": "STRING" }
+                            },
+                            "propertyOrdering": ["question", "options", "correctAnswer"]
+                        }
+                    }
+                };
+            }
+            contents.push({ role: "user", parts: [{ text: promptText }] });
+
+
+            const payload = {
+                contents: contents,
+                generationConfig: {
+                    responseMimeType: "application/json",
+                    responseSchema: responseSchema
+                }
+            };
+
+            const apiKey = "AIzaSyDdS6Djy4akybiUahN29seSf56jPNl-I-4";
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const result = await response.json();
+
+                if (result.candidates && result.candidates.length > 0 &&
+                    result.candidates[0].content && result.candidates[0].content.parts &&
+                    result.candidates[0].content.parts.length > 0) {
+                    const jsonString = result.candidates[0].content.parts[0].text;
+                    const parsedQuestions = JSON.parse(jsonString);
+
+                    let isValid = true;
+                    if (!Array.isArray(parsedQuestions) || parsedQuestions.length === 0) {
+                        isValid = false;
+                    } else {
+                        for (const q of parsedQuestions) {
+                            if (typeof q.question !== 'string' || typeof q.correctAnswer !== 'string') {
+                                isValid = false;
+                                break;
+                            }
+                            if (quizType.startsWith('multiple-choice')) {
+                                if (!Array.isArray(q.options) || q.options.length !== numOptions || !q.options.includes(q.correctAnswer)) {
+                                    isValid = false;
+                                    break;
+                                }
+                            } else if (quizType === 'true-false') {
+                                if (!['True', 'False'].includes(q.correctAnswer)) {
+                                    isValid = false;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+
+                    if (isValid) {
+                        return parsedQuestions;
+                    } else {
+                        errorMessage.textContent = 'Failed to parse quiz questions or questions are not correctly formatted. Please try again with a simpler topic or adjust settings.';
+                        errorMessage.classList.remove('hidden');
+                        return null;
+                    }
+                } else {
+                    errorMessage.textContent = 'No questions generated. Please try a different topic or adjust settings.';
+                    errorMessage.classList.remove('hidden');
+                    return null;
+                }
+            } catch (err) {
+                console.error('Error generating quiz:', err);
+                errorMessage.textContent = 'Failed to generate quiz. Please check your network or try again.';
+                errorMessage.classList.remove('hidden');
+                return null;
+            }
+        }
+
+        // Function to generate and display the quiz for playing
+        async function generateAndPlayQuiz() {
+            showSection(loadingStateDiv);
+            questions = await fetchQuizQuestions(); // Store fetched questions globally
+
+            if (questions) {
+                currentQuestionIndex = 0;
+                score = 0;
+                userAnswers = []; // Reset user answers for new play session
+                renderQuestion();
+                showSection(quizDisplayDiv);
+            } else {
+                showSection(quizSetupDiv); // Go back to setup if quiz generation failed
+            }
+        }
+
+        /**
+         * Creates and downloads a PDF document from a given array of questions.
+         * @param {Array} questionsToRender The array of question objects to include in the PDF.
+         * @param {boolean} includeAnswers Whether to include correct answers in the PDF.
+         * @param {string} titleSuffix A suffix for the PDF filename (e.g., "_quiz", "_review").
+         */
+        async function createPdfDocument(questionsToRender, includeAnswers, titleSuffix = "") {
+            const doc = new jsPDF();
+            let y = 10; // Initial Y position for text
+            const margin = 10;
+            const lineHeight = 7;
+            const maxPageHeight = doc.internal.pageSize.height - margin * 2; // Usable height
+
+            doc.setFontSize(22);
+            doc.text("Make My Quiz", 105, y, { align: 'center' });
+            y += 10;
+            doc.setFontSize(12);
+            doc.text(`Topic: ${quizTopic || 'Image-based Quiz'} | Questions: ${questionsToRender.length} | Level: ${quizLevel} | Type: ${quizType}`, 105, y, { align: 'center' });
+            y += 20;
+
+            questionsToRender.forEach((q, index) => {
+                doc.setFontSize(14);
+                const questionTextLines = doc.splitTextToSize(`${index + 1}. ${q.question}`, doc.internal.pageSize.width - margin * 2);
+                
+                // Check if question fits on current page, if not, add new page
+                if (y + questionTextLines.length * lineHeight > maxPageHeight) {
+                    doc.addPage();
+                    y = margin; // Reset y for new page
+                }
+                doc.text(questionTextLines, margin, y);
+                y += questionTextLines.length * lineHeight;
+                y += 5; // Small space after question
+
+                if (quizType.startsWith('multiple-choice')) { // Check if it's a multiple-choice question
+                    doc.setFontSize(12);
+                    q.options.forEach(option => {
+                        const optionTextLines = doc.splitTextToSize(`- ${option}`, doc.internal.pageSize.width - margin * 2 - 5); // Indent options
+                        if (y + optionTextLines.length * lineHeight > maxPageHeight) {
+                            doc.addPage();
+                            y = margin;
+                        }
+                        doc.text(optionTextLines, margin + 5, y);
+                        y += optionTextLines.length * lineHeight;
+                    });
+                } else if (quizType === 'true-false') {
+                    doc.setFontSize(12);
+                    const trueOptionLines = doc.splitTextToSize(`- True`, doc.internal.pageSize.width - margin * 2 - 5);
+                    if (y + trueOptionLines.length * lineHeight > maxPageHeight) { doc.addPage(); y = margin; }
+                    doc.text(trueOptionLines, margin + 5, y);
+                    y += trueOptionLines.length * lineHeight;
+
+                    const falseOptionLines = doc.splitTextToSize(`- False`, doc.internal.pageSize.width - margin * 2 - 5);
+                    if (y + falseOptionLines.length * lineHeight > maxPageHeight) { doc.addPage(); y = margin; }
+                    doc.text(falseOptionLines, margin + 5, y);
+                    y += falseOptionLines.length * lineHeight;
+                }
+
+                if (includeAnswers) {
+                    doc.setFontSize(12);
+                    doc.setTextColor(0, 128, 0); // Green color for correct answer
+                    const answerText = `Correct Answer: ${q.correctAnswer}`;
+                    const answerTextLines = doc.splitTextToSize(answerText, doc.internal.pageSize.width - margin * 2);
+                    if (y + answerTextLines.length * lineHeight > maxPageHeight) {
+                        doc.addPage();
+                        y = margin;
+                    }
+                    doc.text(answerTextLines, margin, y);
+                    doc.setTextColor(0, 0, 0); // Reset color to black
+                    y += answerTextLines.length * lineHeight;
+                }
+
+                if (y > maxPageHeight) { // Ensure space for next question or new page
+                    doc.addPage();
+                    y = margin;
+                } else {
+                    y += 10; // Space between questions
+                }
+            });
+
+            doc.save(`quiz_${quizTopic || 'image_quiz'}${titleSuffix}_${new Date().toISOString().slice(0,10)}.pdf`);
+            showSection(quizSetupDiv); // Go back to setup after PDF is generated
+        }
+
+        // Handler for the initial "Generate Quiz in PDF" button
+        async function handleGeneratePdfFromSetup() {
+            showSection(loadingStateDiv);
+            const fetchedQuestions = await fetchQuizQuestions();
+            if (fetchedQuestions) {
+                // Show modal for answers
+                pdfConfirmModal.classList.remove('hidden');
+                // Set up modal buttons to call createPdfDocument
+                confirmPdfYesButton.onclick = () => {
+                    pdfConfirmModal.classList.add('hidden');
+                    createPdfDocument(fetchedQuestions, true, ""); // No suffix for initial quiz
+                    // showSection(quizSetupDiv); // This will be handled by createPdfDocument
+                };
+                confirmPdfNoButton.onclick = () => {
+                    pdfConfirmModal.classList.add('hidden');
+                    createPdfDocument(fetchedQuestions, false, "");
+                    // showSection(quizSetupDiv); // This will be handled by createPdfDocument
+                };
+                confirmPdfCancelButton.onclick = () => {
+                    pdfConfirmModal.classList.add('hidden');
+                    showSection(quizSetupDiv); // Return to setup if cancelled
+                };
+            } else {
+                showSection(quizSetupDiv);
+            }
+        }
+
+        // Function to generate PDF of the completed quiz with user's answers and correct answers
+        async function extractCompletedQuizToPdf() {
+            if (userAnswers.length === 0) {
+                errorMessage.textContent = "No quiz completed to extract to PDF.";
+                errorMessage.classList.remove('hidden');
+                return;
+            }
+
+            const doc = new jsPDF();
+            let y = 10;
+            const margin = 10;
+            const lineHeight = 7;
+            const maxPageHeight = doc.internal.pageSize.height - margin * 2;
+
+            doc.setFontSize(22);
+            doc.text("Make My Quiz", 105, y, { align: 'center' });
+            y += 10;
+            doc.setFontSize(12);
+            doc.text(`Topic: ${quizTopic || 'Image-based Quiz'} | Score: ${score}/${questions.length} | Level: ${quizLevel} | Type: ${quizType}`, 105, y, { align: 'center' });
+            y += 20;
+
+            userAnswers.forEach((answer, index) => {
+                doc.setFontSize(14);
+                const questionTextLines = doc.splitTextToSize(`${index + 1}. ${answer.question}`, doc.internal.pageSize.width - margin * 2);
+                
+                if (y + questionTextLines.length * lineHeight + (answer.quizType.startsWith('multiple-choice') ? answer.options.length * lineHeight : 0) + 3 * lineHeight > maxPageHeight) {
+                    doc.addPage();
+                    y = margin;
+                }
+                doc.text(questionTextLines, margin, y);
+                y += questionTextLines.length * lineHeight;
+                y += 5;
+
+                if (answer.quizType.startsWith('multiple-choice')) {
+                    doc.setFontSize(12);
+                    answer.options.forEach(option => {
+                        let optionText = `- ${option}`;
+                        if (option === answer.correctAnswer) {
+                            doc.setTextColor(0, 128, 0); // Green for correct
+                        }
+                        if (option === answer.selectedAnswer && !answer.isCorrect) {
+                            doc.setTextColor(255, 0, 0); // Red for incorrect selected
+                        }
+                        const optionTextLines = doc.splitTextToSize(optionText, doc.internal.pageSize.width - margin * 2 - 5);
+                        doc.text(optionTextLines, margin + 5, y);
+                        doc.setTextColor(0, 0, 0); // Reset color
+                        y += optionTextLines.length * lineHeight;
+                    });
+                } else if (answer.quizType === 'true-false') {
+                    doc.setFontSize(12);
+                    const trueOptionText = `- True`;
+                    const falseOptionText = `- False`;
+
+                    if (answer.correctAnswer === 'True') {
+                        doc.setTextColor(0, 128, 0); // Green for correct
+                    } else if (answer.selectedAnswer === 'True' && !answer.isCorrect) {
+                        doc.setTextColor(255, 0, 0); // Red for incorrect selected
+                    }
+                    doc.text(trueOptionText, margin + 5, y);
+                    doc.setTextColor(0, 0, 0); // Reset color
+                    y += lineHeight;
+
+                    if (answer.correctAnswer === 'False') {
+                        doc.setTextColor(0, 128, 0); // Green for correct
+                    } else if (answer.selectedAnswer === 'False' && !answer.isCorrect) {
+                        doc.setTextColor(255, 0, 0); // Red for incorrect selected
+                    }
+                    doc.text(falseOptionText, margin + 5, y);
+                    doc.setTextColor(0, 0, 0); // Reset color
+                    y += lineHeight;
+                }
+
+
+                doc.setFontSize(12);
+                doc.text(`Your Answer: ${answer.selectedAnswer || 'Not answered'}`, margin, y);
+                y += lineHeight;
+
+                doc.setTextColor(0, 128, 0); // Green for correct answer
+                doc.text(`Correct Answer: ${answer.correctAnswer}`, margin, y);
+                doc.setTextColor(0, 0, 0); // Reset color
+                y += lineHeight;
+
+                doc.setFontSize(14);
+                if (answer.isCorrect) {
+                    doc.setTextColor(0, 128, 0); // Green
+                } else {
+                    doc.setTextColor(255, 0, 0); // Red
+                }
+                doc.text(answer.isCorrect ? 'Correct!' : 'Incorrect.', margin, y);
+                doc.setTextColor(0, 0, 0); // Reset color
+                y += lineHeight + 5; // Space after correctness feedback
+
+                if (y > maxPageHeight) {
+                    doc.addPage();
+                    y = margin;
+                } else {
+                    y += 10; // Space between questions
+                }
+            });
+
+            doc.save(`completed_quiz_review_${quizTopic || 'image_quiz'}_${new Date().toISOString().slice(0,10)}.pdf`);
+            showSection(quizCompletedDiv); // Stay on completed screen after PDF generation
+        }
+
+        // Handler for the new "Extract quiz as PDF" button (after completing quiz)
+        function handleExtractQuizOnlyPdf() {
+            if (questions.length === 0) {
+                errorMessage.textContent = "No quiz questions available to extract. Please generate and complete a quiz first.";
+                errorMessage.classList.remove('hidden');
+                return;
+            }
+            errorMessage.classList.add('hidden'); // Clear any previous error
+
+            // Show modal for answers
+            pdfConfirmModal.classList.remove('hidden');
+            // Set up modal buttons to call createPdfDocument with the global 'questions' array
+            confirmPdfYesButton.onclick = () => {
+                pdfConfirmModal.classList.add('hidden');
+                createPdfDocument(questions, true, "_quiz_only"); // Suffix for quiz-only extract
+                showSection(quizCompletedDiv); // Stay on completed screen
+            };
+            confirmPdfNoButton.onclick = () => {
+                pdfConfirmModal.classList.add('hidden');
+                createPdfDocument(questions, false, "_quiz_only");
+                showSection(quizCompletedDiv); // Stay on completed screen
+            };
+            confirmPdfCancelButton.onclick = () => {
+                pdfConfirmModal.classList.add('hidden');
+                showSection(quizCompletedDiv); // Stay on completed screen if cancelled
+            };
+        }
+
+
+        // Function to render the current question and its options
+        function renderQuestion() {
+            const currentQuestion = questions[currentQuestionIndex];
+            if (!currentQuestion) return;
+
+            questionCounter.textContent = `Question ${currentQuestionIndex + 1} of ${questions.length}`;
+            scoreDisplay.textContent = `Score: ${score}`;
+            questionText.textContent = currentQuestion.question;
+            optionsContainer.innerHTML = ''; // Clear previous content
+
+            if (quizType === 'direct-answer') {
+                const inputField = document.createElement('input');
+                inputField.type = 'text';
+                inputField.id = 'direct-answer-input';
+                inputField.classList.add('w-full', 'p-4', 'border-2', 'border-gray-300', 'rounded-lg', 'focus:outline-none', 'focus:ring-4', 'focus:ring-indigo-500', 'focus:border-transparent', 'text-lg', 'mb-4', 'shadow-sm');
+                inputField.placeholder = 'Type your answer here...';
+                optionsContainer.appendChild(inputField);
+
+                const submitButton = document.createElement('button');
+                submitButton.id = 'submit-direct-answer-button';
+                submitButton.textContent = 'Submit Answer';
+                submitButton.classList.add('w-full', 'bg-blue-500', 'text-white', 'py-3', 'px-6', 'rounded-lg', 'text-lg', 'font-semibold', 'hover:bg-blue-600', 'transition', 'duration-300', 'ease-in-out', 'shadow-md', 'transform', 'hover:scale-105');
+                submitButton.onclick = () => handleAnswer(inputField.value.trim(), submitButton);
+                optionsContainer.appendChild(submitButton);
+
+                inputField.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        handleAnswer(inputField.value.trim(), submitButton);
+                    }
+                });
+
+            } else if (quizType === 'true-false') {
+                const trueButton = document.createElement('button');
+                trueButton.textContent = 'True';
+                trueButton.classList.add(
+                    'p-4', 'rounded-lg', 'text-left', 'text-lg', 'font-medium',
+                    'transition', 'duration-200', 'ease-in-out',
+                    'bg-gray-100', 'text-gray-800', 'hover:bg-gray-200', 'shadow-sm',
+                    'cursor-pointer'
+                );
+                trueButton.onclick = () => handleAnswer('True', trueButton);
+                optionsContainer.appendChild(trueButton);
+
+                const falseButton = document.createElement('button');
+                falseButton.textContent = 'False';
+                falseButton.classList.add(
+                    'p-4', 'rounded-lg', 'text-left', 'text-lg', 'font-medium',
+                    'transition', 'duration-200', 'ease-in-out',
+                    'bg-gray-100', 'text-gray-800', 'hover:bg-gray-200', 'shadow-sm',
+                    'cursor-pointer'
+                );
+                falseButton.onclick = () => handleAnswer('False', falseButton);
+                optionsContainer.appendChild(falseButton);
+
+            } else { // Multiple choice
+                currentQuestion.options.forEach((option, index) => {
+                    const button = document.createElement('button');
+                    button.textContent = option;
+                    button.classList.add(
+                        'p-4', 'rounded-lg', 'text-left', 'text-lg', 'font-medium',
+                        'transition', 'duration-200', 'ease-in-out',
+                        'bg-gray-100', 'text-gray-800', 'hover:bg-gray-200', 'shadow-sm',
+                        'cursor-pointer'
+                    );
+                    button.onclick = () => handleAnswer(option, button);
+                    optionsContainer.appendChild(button);
+                });
+            }
+
+            feedbackMessage.classList.add('hidden');
+            nextQuestionButton.classList.add('hidden');
+            llmFeaturesDiv.classList.add('hidden');
+            explanationOutput.classList.add('hidden');
+            funFactOutput.classList.add('hidden');
+            selectedOption = null;
+        }
+
+        // Function to handle user's answer selection
+        function handleAnswer(answerProvided, clickedElement) {
+            if (selectedOption !== null) return;
+
+            selectedOption = answerProvided;
+            const currentQuestion = questions[currentQuestionIndex];
+            let isCorrect = false;
+
+            if (quizType === 'direct-answer') {
+                isCorrect = (answerProvided.toLowerCase() === currentQuestion.correctAnswer.toLowerCase());
+                const inputField = document.getElementById('direct-answer-input');
+                const submitButton = document.getElementById('submit-direct-answer-button');
+                if (inputField) {
+                    inputField.disabled = true;
+                    if (isCorrect) {
+                        inputField.classList.add('bg-green-100', 'border-green-500');
+                    } else {
+                        inputField.classList.add('bg-red-100', 'border-red-500');
+                    }
+                }
+                if (submitButton) submitButton.disabled = true;
+
+            } else if (quizType === 'true-false') {
+                isCorrect = (answerProvided === currentQuestion.correctAnswer);
+                Array.from(optionsContainer.children).forEach(button => {
+                    button.disabled = true;
+                    button.classList.remove('cursor-pointer');
+                    button.classList.add('cursor-not-allowed');
+                    if (button.textContent === currentQuestion.correctAnswer) {
+                        button.classList.remove('bg-gray-100', 'hover:bg-gray-200', 'text-gray-800');
+                        button.classList.add('bg-green-500', 'text-white', 'shadow-md');
+                    } else if (button.textContent === answerProvided) {
+                        button.classList.remove('bg-gray-100', 'hover:bg-gray-200', 'text-gray-800');
+                        button.classList.add('bg-red-500', 'text-white', 'shadow-md');
+                    }
+                });
+            }
+            else { // Multiple choice
+                isCorrect = (answerProvided === currentQuestion.correctAnswer);
+                Array.from(optionsContainer.children).forEach(button => {
+                    button.disabled = true;
+                    button.classList.remove('cursor-pointer');
+                    button.classList.add('cursor-not-allowed');
+                    if (button.textContent === currentQuestion.correctAnswer) {
+                        button.classList.remove('bg-gray-100', 'hover:bg-gray-200', 'text-gray-800');
+                        button.classList.add('bg-green-500', 'text-white', 'shadow-md');
+                    } else if (button.textContent === answerProvided) {
+                        button.classList.remove('bg-gray-100', 'hover:bg-gray-200', 'text-gray-800');
+                        button.classList.add('bg-red-500', 'text-white', 'shadow-md');
+                    }
+                });
+            }
+
+            userAnswers.push({
+                question: currentQuestion.question,
+                options: quizType.startsWith('multiple-choice') ? [...currentQuestion.options] : (quizType === 'true-false' ? ['True', 'False'] : []),
+                selectedAnswer: selectedOption,
+                correctAnswer: currentQuestion.correctAnswer,
+                isCorrect: isCorrect,
+                quizType: quizType
+            });
+
+            if (isCorrect) {
+                score++;
+                feedbackMessage.textContent = 'Correct!';
+                feedbackMessage.classList.remove('text-red-700');
+                feedbackMessage.classList.add('text-green-700');
+                playCorrectSound(); // Play correct sound
+            } else {
+                feedbackMessage.textContent = `Incorrect. The correct answer was: ${currentQuestion.correctAnswer}`;
+                feedbackMessage.classList.remove('text-green-700');
+                feedbackMessage.classList.add('text-red-700');
+                playIncorrectSound(); // Play incorrect sound
+            }
+            feedbackMessage.classList.remove('hidden');
+
+            nextQuestionButton.classList.remove('hidden');
+            llmFeaturesDiv.classList.remove('hidden');
+            updateNextButtonText();
+            scoreDisplay.textContent = `Score: ${score}`;
+        }
+
+        // Function to update the text of the "Next Question" button
+        function updateNextButtonText() {
+            if (currentQuestionIndex < questions.length - 1) {
+                nextQuestionButton.textContent = 'Next Question';
+            } else {
+                nextQuestionButton.textContent = 'Finish Quiz';
+            }
+        }
+
+        // Function to move to the next question or finish the quiz
+        function handleNextQuestion() {
+            if (currentQuestionIndex < questions.length - 1) {
+                currentQuestionIndex++;
+                renderQuestion();
+            } else {
+                finalScoreDisplay.textContent = `${score} / ${questions.length}`;
+                showSection(quizCompletedDiv);
+                playCompletionSound(); // Play completion sound
+            }
+        }
+
+        // Function to start a new quiz (resets all states)
+        function startNewQuiz() {
+            quizTopicInput.value = '';
+            imageUploadInput.value = '';
+            uploadedImageBase64 = null;
+            imageFileName = '';
+            imagePreviewContainer.classList.add('hidden');
+            imagePreview.src = '#';
+
+            numQuestionsInput.value = '5';
+            quizLevelSelect.value = 'mixed';
+            quizTypeSelect.value = ''; // Reset quiz type to empty for the new default
+            questions = [];
+            userAnswers = [];
+            currentQuestionIndex = 0;
+            score = 0;
+            selectedOption = null;
+            feedbackMessage.classList.add('hidden');
+            errorMessage.classList.add('hidden');
+            llmFeaturesDiv.classList.add('hidden');
+            explanationOutput.classList.add('hidden');
+            funFactOutput.classList.add('hidden');
+            showSection(quizSetupDiv);
+        }
+
+        // Function to show the quiz review
+        function showReview() {
+            reviewQuestionsContainer.innerHTML = '';
+            userAnswers.forEach((answer, index) => {
+                const questionReviewDiv = document.createElement('div');
+                questionReviewDiv.classList.add('bg-gray-50', 'p-6', 'rounded-lg', 'shadow-md', 'mb-4');
+
+                const questionNum = index + 1;
+                const correctnessClass = answer.isCorrect ? 'text-green-700' : 'text-red-700';
+
+                let optionsHtml = '';
+                if (answer.quizType.startsWith('multiple-choice')) {
+                    answer.options.forEach(option => {
+                        let optionClass = 'text-gray-800';
+                        if (option === answer.correctAnswer) {
+                            optionClass = 'font-bold text-green-600';
+                        }
+                        if (option === answer.selectedAnswer && !answer.isCorrect) {
+                            optionClass = 'font-bold text-red-600';
+                        }
+                        optionsHtml += `<p class="mb-1 ${optionClass}">${option}</p>`;
+                    });
+                } else if (answer.quizType === 'true-false') {
+                    optionsHtml += `<p class="mb-1 ${answer.correctAnswer === 'True' ? 'font-bold text-green-600' : 'text-gray-800'}">True</p>`;
+                    optionsHtml += `<p class="mb-1 ${answer.correctAnswer === 'False' ? 'font-bold text-green-600' : 'text-gray-800'}">False</p>`;
+                } else {
+                    optionsHtml = `<p class="mb-1 text-gray-800">Correct Answer: <span class="font-bold text-green-600">${answer.correctAnswer}</span></p>`;
+                }
+
+
+                questionReviewDiv.innerHTML = `
+                    <h3 class="text-xl font-semibold text-gray-900 mb-2">Question ${questionNum}: ${answer.question}</h3>
+                    <div class="mb-3">${optionsHtml}</div>
+                    <p class="text-md mb-1">Your Answer: <span class="${answer.isCorrect ? 'text-green-600' : 'text-red-600'} font-medium">${answer.selectedAnswer || 'Not answered'}</span></p>
+                    <p class="text-lg font-bold ${correctnessClass} mt-2">${answer.isCorrect ? 'Correct!' : 'Incorrect.'}</p>
+                `;
+                reviewQuestionsContainer.appendChild(questionReviewDiv);
+            });
+            showSection(quizReviewDisplayDiv);
+        }
+
+        // --- LLM Feature Functions ---
+
+        // Function to get explanation from Gemini
+        async function getExplanation() {
+            explanationOutput.classList.add('hidden');
+            explanationLoading.classList.remove('hidden');
+
+            const currentQuestion = questions[currentQuestionIndex];
+            const prompt = `Explain why "${currentQuestion.correctAnswer}" is the correct answer for the question "${currentQuestion.question}". Keep the explanation concise and easy to understand.`;
+
+            const payload = {
+                contents: [{ role: "user", parts: [{ text: prompt }] }]
+            };
+            const apiKey = "AIzaSyDdS6Djy4akybiUahN29seSf56jPNl-I-4";
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const result = await response.json();
+
+                if (result.candidates && result.candidates.length > 0 && result.candidates[0].content && result.candidates[0].content.parts && result.candidates[0].content.parts.length > 0) {
+                    explanationOutput.textContent = result.candidates[0].content.parts[0].text;
+                    explanationOutput.classList.remove('hidden');
+                } else {
+                    explanationOutput.textContent = 'Could not generate explanation. Please try again.';
+                    explanationOutput.classList.remove('hidden');
+                }
+            } catch (err) {
+                console.error('Error generating explanation:', err);
+                explanationOutput.textContent = 'Failed to generate explanation. Network error or API issue.';
+                explanationOutput.classList.remove('hidden');
+            } finally {
+                explanationLoading.classList.add('hidden');
+            }
+        }
+
+        // Function to get fun fact from Gemini
+        async function getFunFact() {
+            funFactOutput.classList.add('hidden');
+            funFactLoading.classList.remove('hidden');
+
+            const prompt = `Tell me a short, interesting fun fact about "${quizTopic || 'the current quiz topic'}".`;
+
+            const payload = {
+                contents: [{ role: "user", parts: [{ text: prompt }] }]
+            };
+            const apiKey = "AIzaSyBl5fGiL7eb8zvrZexCdO1oPVwtTQVm8L8";
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const result = await response.json();
+
+                if (result.candidates && result.candidates.length > 0 && result.candidates[0].content && result.candidates[0].content.parts && result.candidates[0].content.parts.length > 0) {
+                    funFactOutput.textContent = result.candidates[0].content.parts[0].text;
+                    funFactOutput.classList.remove('hidden');
+                } else {
+                    funFactOutput.textContent = 'Could not generate fun fact. Please try again.';
+                    funFactOutput.classList.remove('hidden');
+                }
+            } catch (err) {
+                console.error('Error generating fun fact:', err);
+                funFactOutput.textContent = 'Failed to generate fun fact. Network error or API issue.';
+                funFactOutput.classList.remove('hidden');
+            } finally {
+                funFactLoading.classList.add('hidden');
+            }
+        }
+
+
+        // Event Listeners
+        generateQuizButton.addEventListener('click', generateAndPlayQuiz);
+        generatePdfButton.addEventListener('click', handleGeneratePdfFromSetup);
+        
+        // PDF Confirmation Modal event listeners (reused for both PDF generation types)
+        confirmPdfYesButton.addEventListener('click', () => {
+            // This logic is now handled within handleGeneratePdfFromSetup and handleExtractQuizOnlyPdf
+            // The onclick handlers for these buttons are set dynamically when the modal is shown.
+        });
+        confirmPdfNoButton.addEventListener('click', () => {
+            // This logic is now handled within handleGeneratePdfFromSetup and handleExtractQuizOnlyPdf
+        });
+        confirmPdfCancelButton.addEventListener('click', () => {
+            // This logic is now handled within handleGeneratePdfFromSetup and handleExtractQuizOnlyPdf
+        });
+
+        nextQuestionButton.addEventListener('click', handleNextQuestion);
+        startNewQuizButton.addEventListener('click', startNewQuiz);
+        reviewQuizButton.addEventListener('click', showReview);
+        extractReviewPdfButton.addEventListener('click', extractCompletedQuizToPdf);
+        extractQuizOnlyPdfButton.addEventListener('click', handleExtractQuizOnlyPdf);
+        backToNewQuizButton.addEventListener('click', startNewQuiz);
+        explainAnswerButton.addEventListener('click', getExplanation);
+        getFunFactButton.addEventListener('click', getFunFact);
+
+        // Image upload handling
+        imageUploadInput.addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                if (!file.type.startsWith('image/')) {
+                    errorMessage.textContent = 'Please upload an image file (e.g., JPG, PNG).';
+                    errorMessage.classList.remove('hidden');
+                    imagePreviewContainer.classList.add('hidden');
+                    imagePreview.src = '#';
+                    uploadedImageBase64 = null;
+                    imageFileName = '';
+                    imageUploadInput.value = '';
+                    return;
+                }
+
+                errorMessage.classList.add('hidden');
+                imageFileName = file.name;
+                imageFileNameDisplay.textContent = `File: ${imageFileName}`;
+
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    uploadedImageBase64 = e.target.result.split(',')[1];
+                    imagePreview.src = e.target.result;
+                    imagePreviewContainer.classList.remove('hidden');
+                    quizTopicInput.value = ''; // Clear text topic if image is uploaded
+                };
+                reader.onerror = () => {
+                    errorMessage.textContent = 'Failed to read image file.';
+                    errorMessage.classList.remove('hidden');
+                    imagePreviewContainer.classList.add('hidden');
+                    imagePreview.src = '#';
+                    uploadedImageBase64 = null;
+                    imageFileName = '';
+                    imageUploadInput.value = '';
+                };
+                reader.readAsDataURL(file);
+            } else {
+                uploadedImageBase64 = null;
+                imageFileName = '';
+                imagePreviewContainer.classList.add('hidden');
+                imagePreview.src = '#';
+                imageFileNameDisplay.textContent = '';
+            }
+        });
+
+
+        // Allow pressing Enter in input fields to trigger quiz generation
+        quizTopicInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') generateAndPlayQuiz();
+        });
+        numQuestionsInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') generateAndPlayQuiz();
+        });
+        quizLevelSelect.addEventListener('change', (e) => {
+            quizLevel = e.target.value;
+        });
+        quizTypeSelect.addEventListener('change', (e) => {
+            quizType = e.target.value;
+        });
+
+
+        // Initial setup on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            showSection(quizSetupDiv);
+        });
+    </script>
+</body>
+</html>
