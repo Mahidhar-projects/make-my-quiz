@@ -3,40 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Make My Quiz - Your Custom Quiz Generator</title>
-
-    <!-- SEO Meta Tags -->
-    <meta name="description" content="Create custom quizzes on any topic or from an image! Generate multiple-choice, true/false, or direct answer questions with varying difficulty. Review your answers and export quizzes to PDF.">
-    <meta name="keywords" content="quiz generator, online quiz, create quiz, custom quiz, AI quiz, image quiz, test maker, study tool, multiple choice quiz, true false quiz, direct answer quiz, PDF quiz">
-    <meta name="author" content="Mahidhar">
-    <meta name="robots" content="index, follow">
-    <!-- Updated canonical URL -->
-    <link rel="canonical" href="https://mahidhar-projects.github.io/make-my-quiz">
-
-    <!-- Open Graph / Social Media Tags -->
-    <meta property="og:title" content="Make My Quiz - Create & Play Custom Quizzes">
-    <meta property="og:description" content="Generate personalized quizzes instantly from text or images. Fun, interactive, and customizable for any subject!">
-    <!-- Replace [URL_TO_YOUR_APP_IMAGE] with a direct URL to an image (e.g., screenshot, logo) -->
-    <meta property="og:image" content="https://www.bing.com/images/search?view=detailV2&ccid=qf3MuoW3&id=3DD5C0D1DF94E401AB13B60EC325ADD7BFE26323&thid=OIP.qf3MuoW3IJfSlGkiTku11gHaHa&mediaurl=https%3a%2f%2fstatic.vecteezy.com%2fsystem%2fresources%2fpreviews%2f022%2f286%2f207%2foriginal%2fletter-i-pink-alphabet-glossy-png.png&exph=1920&expw=1920&q=i&simid=608034964998923302&FORM=IRPRST&ck=41C96A2D2413A69AF7F624932CA6B859&selectedIndex=4&itb=1">
-    <!-- Updated og:url -->
-    <meta property="og:url" content="https://mahidhar-projects.github.io/make-my-quiz">
-    <meta property="og:type" content="website">
-
-    <!-- Twitter Card Tags -->
-    <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:site" content="@YourTwitterHandle"> <!-- Optional: Replace with your Twitter handle -->
-    <meta name="twitter:title" content="Make My Quiz - Create & Play Custom Quizzes">
-    <meta name="twitter:description" content="Generate personalized quizzes instantly from text or images. Fun, interactive, and customizable for any subject!">
-    <meta name="twitter:image" content="[URL_TO_YOUR_APP_IMAGE]">
-
+    <title>Make My Quiz</title>
     <!-- Google Analytics (GA4) Tracking Code -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-YOUR_MEASUREMENT_ID"></script>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-SES78WP352"></script>
     <script>
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
       gtag('js', new Date());
 
-      gtag('config', 'G-YOUR_MEASUREMENT_ID'); // Replace G-YOUR_MEASUREMENT_ID with your actual GA4 Measurement ID
+      gtag('config', 'G-SES78WP352'); // Replace G-YOUR_MEASUREMENT_ID with your actual GA4 Measurement ID
     </script>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -148,23 +123,21 @@
 </head>
 <body class="min-h-screen bg-gradient-to-br from-purple-600 to-indigo-800 flex items-center justify-center p-4">
 
-    <main id="app" class="bg-white rounded-xl shadow-2xl p-4 md:p-8 w-full max-w-2xl transform transition-all duration-300 ease-in-out hover:scale-105">
+    <div id="app" class="bg-white rounded-xl shadow-2xl p-4 md:p-8 w-full max-w-2xl transform transition-all duration-300 ease-in-out hover:scale-105">
         <h1 class="text-3xl md:text-4xl font-extrabold text-center text-gray-900 mb-8">
             Make My Quiz
         </h1>
 
         <!-- Initial state: Topic and number of questions input -->
-        <section id="quiz-setup" class="text-center">
+        <div id="quiz-setup" class="text-center">
             <p class="text-base md:text-lg text-gray-700 mb-6">
                 Enter a topic, upload an image, or both! Then choose quiz settings.
             </p>
-            <label for="quiz-topic-input" class="sr-only">Quiz Topic</label>
             <input
                 type="text"
                 id="quiz-topic-input"
                 class="w-full p-3 md:p-4 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-4 focus:ring-indigo-500 focus:border-transparent text-base md:text-lg mb-4 shadow-sm"
                 placeholder="e.g., 'World History', 'Science', 'Pop Culture'"
-                aria-label="Enter quiz topic"
             />
             <div class="w-full mb-4">
                 <label for="image-upload-input" class="block text-left text-gray-700 text-sm font-medium mb-2">Upload Image (Optional):</label>
@@ -173,7 +146,6 @@
                     id="image-upload-input"
                     accept="image/*"
                     class="w-full p-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-4 focus:ring-indigo-500 focus:border-transparent text-base md:text-lg shadow-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-violet-50 file:text-violet-700 hover:file:bg-violet-100"
-                    aria-label="Upload an image for the quiz topic"
                 />
                 <div id="image-preview-container" class="mt-4 hidden">
                     <img id="image-preview" src="#" alt="Image Preview" class="max-w-full h-auto rounded-lg shadow-md mx-auto" style="max-height: 200px;">
@@ -181,7 +153,6 @@
                 </div>
             </div>
 
-            <label for="num-questions-input" class="sr-only">Number of Questions</label>
             <input
                 type="number"
                 id="num-questions-input"
@@ -189,24 +160,19 @@
                 placeholder="Number of questions (default: 5)"
                 value="5"
                 min="1"
-                aria-label="Enter number of questions"
             />
-            <label for="quiz-level-select" class="sr-only">Quiz Difficulty Level</label>
             <select
                 id="quiz-level-select"
                 class="w-full p-3 md:p-4 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-4 focus:ring-indigo-500 focus:border-transparent text-base md:text-lg mb-4 shadow-sm appearance-none bg-white pr-8 select-with-custom-arrow"
-                aria-label="Select quiz difficulty level"
             >
                 <option value="mixed">Choose a level</option>
                 <option value="easy">Easy</option>
                 <option value="medium">Medium</option>
                 <option value="advanced">Advanced</option>
             </select>
-            <label for="quiz-type-select" class="sr-only">Quiz Answer Type</label>
             <select
                 id="quiz-type-select"
                 class="w-full p-3 md:p-4 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-4 focus:ring-indigo-500 focus:border-transparent text-base md:text-lg mb-6 shadow-sm appearance-none bg-white pr-8 select-with-custom-arrow"
-                aria-label="Select quiz answer type"
             >
                 <!-- New default option for user to select an answer type -->
                 <option value="" disabled selected>Choose Answer Type</option>
@@ -214,13 +180,14 @@
                 <option value="multiple-choice-3">Multiple Choice (3 Options)</option>
                 <option value="multiple-choice-2">Multiple Choice (2 Options)</option>
                 <option value="direct-answer">Direct Answer</option>
-                <option value="true-false">True or False</option> </select>
+                <option value="true-false">True or False</option> <!-- New True/False option -->
+            </select>
 
             <!-- Sound Settings Toggle -->
             <div class="flex items-center justify-between mb-6 p-3 bg-gray-50 rounded-lg shadow-sm">
                 <label for="sound-toggle" class="text-gray-700 text-base md:text-lg font-medium">Sound Effects</label>
                 <label class="toggle-switch">
-                    <input type="checkbox" id="sound-toggle" checked aria-label="Toggle sound effects">
+                    <input type="checkbox" id="sound-toggle" checked>
                     <span class="slider"></span>
                 </label>
             </div>
@@ -228,47 +195,45 @@
             <button
                 id="generate-quiz-button"
                 class="w-full bg-indigo-600 text-white py-3 md:py-4 px-6 rounded-lg text-lg md:text-xl font-semibold hover:bg-indigo-700 transition duration-300 ease-in-out shadow-lg transform hover:scale-105 mb-4"
-                aria-label="Generate Quiz button"
             >
                 Generate Quiz
             </button>
             <button
                 id="generate-pdf-button"
                 class="w-full bg-red-600 text-white py-3 md:py-4 px-6 rounded-lg text-lg md:text-xl font-semibold hover:bg-red-700 transition duration-300 ease-in-out shadow-lg transform hover:scale-105"
-                aria-label="Generate Quiz in PDF button"
             >
                 Generate Quiz in PDF
             </button>
-            <p id="error-message" class="text-red-600 mt-4 text-sm md:text-md font-medium hidden" role="alert"></p>
-        </section>
+            <p id="error-message" class="text-red-600 mt-4 text-sm md:text-md font-medium hidden"></p>
+        </div>
 
         <!-- Loading state -->
-        <section id="loading-state" class="text-center py-10 hidden" aria-live="polite" aria-busy="true">
-            <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-indigo-500 mx-auto mb-4" role="status"></div>
+        <div id="loading-state" class="text-center py-10 hidden">
+            <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-indigo-500 mx-auto mb-4"></div>
             <p class="text-base md:text-xl text-gray-700 font-semibold">Generating your quiz...</p>
-        </section>
+        </div>
 
         <!-- Quiz display area -->
-        <section id="quiz-display" class="quiz-container hidden" aria-live="polite">
+        <div id="quiz-display" class="quiz-container hidden">
             <!-- Progress Bar -->
-            <div class="w-full bg-gray-200 rounded-full h-3 mb-6" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" aria-label="Quiz progress">
+            <div class="w-full bg-gray-200 rounded-full h-3 mb-6">
                 <div id="progress-bar" class="bg-indigo-600 h-3 rounded-full transition-all duration-300 ease-in-out" style="width: 0%;"></div>
             </div>
 
+            <!-- Question and score will be inserted here by JavaScript -->
             <div class="flex justify-between items-center mb-6">
-                <p id="question-counter" class="text-base md:text-lg text-gray-600 font-medium" aria-live="polite">Question 1 of 5</p>
-                <p id="score-display" class="text-base md:text-lg text-gray-600 font-medium" aria-live="polite">Score: 0</p>
+                <p id="question-counter" class="text-base md:text-lg text-gray-600 font-medium">Question 1 of 5</p>
+                <p id="score-display" class="text-base md:text-lg text-gray-600 font-medium">Score: 0</p>
             </div>
             <h2 id="question-text" class="text-xl md:text-2xl font-bold text-gray-800 mb-6 leading-relaxed"></h2>
-            <div id="options-container" class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6" role="radiogroup" aria-labelledby="question-text">
+            <div id="options-container" class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                 </div>
 
-            <p id="feedback-message" class="text-center text-lg md:text-xl font-semibold mb-6 mt-4 hidden" aria-live="polite"></p>
+            <p id="feedback-message" class="text-center text-lg md:text-xl font-semibold mb-6 mt-4 hidden"></p>
             
             <button
                 id="next-question-button"
                 class="w-full bg-blue-600 text-white py-2 md:py-3 px-6 rounded-lg text-base md:text-lg font-semibold hover:bg-blue-700 transition duration-300 ease-in-out shadow-md transform hover:scale-105 hidden"
-                aria-label="Next Question button"
             >
                 Next Question
             </button>
@@ -278,33 +243,31 @@
                     <button
                         id="explain-answer-button"
                         class="flex-1 bg-purple-500 text-white py-2 md:py-3 px-6 rounded-lg text-base md:text-lg font-semibold hover:bg-purple-600 transition duration-300 ease-in-out shadow-md transform hover:scale-105"
-                        aria-label="Explain Answer button"
                     >
                         Explain Answer ✨
                     </button>
                     <button
                         id="get-fun-fact-button"
                         class="flex-1 bg-teal-500 text-white py-2 md:py-3 px-6 rounded-lg text-base md:text-lg font-semibold hover:bg-teal-600 transition duration-300 ease-in-out shadow-md transform hover:scale-105"
-                        aria-label="Get Fun Fact button"
                     >
                         Get Fun Fact ✨
                     </button>
                 </div>
-                <div id="explanation-loading" class="text-center py-2 hidden" aria-live="polite" aria-busy="true">
-                    <div class="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-purple-400 mx-auto" role="status"></div>
+                <div id="explanation-loading" class="text-center py-2 hidden">
+                    <div class="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-purple-400 mx-auto"></div>
                     <p class="text-gray-600 text-sm mt-2">Generating explanation...</p>
                 </div>
-                <div id="explanation-output" class="bg-blue-50 p-4 rounded-lg border border-blue-200 text-gray-800 text-sm md:text-base hidden" aria-live="polite"></div>
+                <div id="explanation-output" class="bg-blue-50 p-4 rounded-lg border border-blue-200 text-gray-800 text-sm md:text-base hidden"></div>
 
-                <div id="fun-fact-loading" class="text-center py-2 hidden" aria-live="polite" aria-busy="true">
-                    <div class="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-teal-400 mx-auto" role="status"></div>
+                <div id="fun-fact-loading" class="text-center py-2 hidden">
+                    <div class="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-teal-400 mx-auto"></div>
                     <p class="text-gray-600 text-sm mt-2">Generating fun fact...</p>
                 </div>
-                <div id="fun-fact-output" class="bg-green-50 p-4 rounded-lg border border-green-200 text-gray-800 text-sm md:text-base hidden" aria-live="polite"></div>
+                <div id="fun-fact-output" class="bg-green-50 p-4 rounded-lg border border-green-200 text-gray-800 text-sm md:text-base hidden"></div>
             </div>
-        </section>
+        </div>
 
-        <section id="quiz-completed" class="text-center hidden" aria-live="polite">
+        <div id="quiz-completed" class="text-center hidden">
             <h2 class="text-2xl md:text-3xl font-bold text-gray-800 mb-4">Quiz Completed!</h2>
             <p class="text-xl md:text-2xl text-gray-700 mb-6">
                 Your final score is: <span id="final-score" class="font-extrabold text-indigo-600">0 / 0</span>
@@ -313,14 +276,12 @@
                 <button
                     id="review-quiz-button"
                     class="flex-1 bg-yellow-500 text-white py-3 md:py-4 px-6 rounded-lg text-lg md:text-xl font-semibold hover:bg-yellow-600 transition duration-300 ease-in-out shadow-lg transform hover:scale-105"
-                    aria-label="Review Quiz button"
                 >
                     Review Quiz
                 </button>
                 <button
                     id="extract-review-pdf-button"
                     class="flex-1 bg-red-600 text-white py-3 md:py-4 px-6 rounded-lg text-lg md:text-xl font-semibold hover:bg-red-700 transition duration-300 ease-in-out shadow-lg transform hover:scale-105"
-                    aria-label="Extract Quiz Review as PDF button"
                 >
                     Extract review as PDF
                 </button>
@@ -328,37 +289,35 @@
             <button
                 id="extract-quiz-only-pdf-button"
                 class="w-full bg-red-500 text-white py-3 md:py-4 px-6 rounded-lg text-lg md:text-xl font-semibold hover:bg-red-600 transition duration-300 ease-in-out shadow-lg transform hover:scale-105 mt-4"
-                aria-label="Extract Quiz Questions Only as PDF button"
             >
                 Extract quiz as PDF
             </button>
             <button
                 id="start-new-quiz-button"
                 class="w-full bg-green-600 text-white py-3 md:py-4 px-6 rounded-lg text-lg md:text-xl font-semibold hover:bg-green-700 transition duration-300 ease-in-out shadow-lg transform hover:scale-105 mt-4"
-                aria-label="Start New Quiz button"
             >
                 Start New Quiz
             </button>
-        </section>
+        </div>
 
-        <section id="quiz-review-display" class="quiz-container hidden">
+        <div id="quiz-review-display" class="quiz-container hidden">
             <h2 class="text-2xl md:text-3xl font-bold text-gray-800 mb-6 text-center">Quiz Review</h2>
             <div id="review-questions-container" class="space-y-8">
                 </div>
             <button
                 id="back-to-new-quiz-button"
                 class="w-full bg-green-600 text-white py-3 md:py-4 px-6 rounded-lg text-lg md:text-xl font-semibold hover:bg-green-700 transition duration-300 ease-in-out shadow-lg transform hover:scale-105 mt-8"
-                aria-label="Back to New Quiz button"
             >
                 Start New Quiz
             </button>
-        </section>
+        </div>
 
-    </main>
+    </div>
 
-    <div id="pdf-confirm-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="pdf-modal-title">
+    <!-- PDF Confirmation Modal -->
+    <div id="pdf-confirm-modal" class="modal-overlay hidden">
         <div class="modal-content">
-            <h3 id="pdf-modal-title" class="xl md:text-2xl font-bold text-gray-800 mb-4">Include Correct Answers?</h3>
+            <h3 class="xl md:text-2xl font-bold text-gray-800 mb-4">Include Correct Answers?</h3>
             <p class="text-base md:text-lg text-gray-700 mb-6">
                 Do you want to include the correct answers after each question in the PDF?
             </p>
@@ -366,21 +325,18 @@
                 <button
                     id="confirm-pdf-yes"
                     class="bg-green-600 text-white py-2 md:py-3 px-6 rounded-lg text-base md:text-lg font-semibold hover:bg-green-700 transition duration-300 ease-in-out shadow-md"
-                    aria-label="Yes, include answers in PDF"
                 >
                     Yes
                 </button>
                 <button
                     id="confirm-pdf-no"
                     class="bg-blue-600 text-white py-2 md:py-3 px-6 rounded-lg text-base md:text-lg font-semibold hover:bg-blue-700 transition duration-300 ease-in-out shadow-md"
-                    aria-label="No, do not include answers in PDF"
                 >
                     No
                 </button>
                 <button
                     id="confirm-pdf-cancel"
                     class="bg-gray-400 text-white py-2 md:py-3 px-6 rounded-lg text-base md:text-lg font-semibold hover:bg-gray-500 transition duration-300 ease-in-out shadow-md"
-                    aria-label="Cancel PDF generation"
                 >
                     Cancel
                 </button>
@@ -514,11 +470,8 @@
             if (questions.length > 0) {
                 const progress = ((currentQuestionIndex) / questions.length) * 100;
                 progressBar.style.width = `${progress}%`;
-                // Update ARIA value for accessibility
-                progressBar.parentElement.setAttribute('aria-valuenow', Math.round(progress));
             } else {
                 progressBar.style.width = '0%';
-                progressBar.parentElement.setAttribute('aria-valuenow', 0);
             }
         }
 
@@ -687,7 +640,7 @@
                 }
             };
 
-            const apiKey = "AIzaSyBl5fGiL7eb8zvrZexCdO1oPVwtTQVm8L8"; // Updated API Key
+            const apiKey = "";
             const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
 
             try {
@@ -814,12 +767,12 @@
                     const trueOptionLines = doc.splitTextToSize(`- True`, doc.internal.pageSize.width - margin * 2 - 5);
                     if (y + trueOptionLines.length * lineHeight > maxPageHeight) { doc.addPage(); y = margin; }
                     doc.text(trueOptionLines, margin + 5, y);
-                    y += lineHeight;
+                    y += trueOptionLines.length * lineHeight;
 
                     const falseOptionLines = doc.splitTextToSize(`- False`, doc.internal.pageSize.width - margin * 2 - 5);
                     if (y + falseOptionLines.length * lineHeight > maxPageHeight) { doc.addPage(); y = margin; }
                     doc.text(falseOptionLines, margin + 5, y);
-                    y += lineHeight;
+                    y += falseOptionLines.length * lineHeight;
                 }
 
                 if (includeAnswers) {
@@ -1024,7 +977,6 @@
                 inputField.id = 'direct-answer-input';
                 inputField.classList.add('w-full', 'p-3', 'md:p-4', 'border-2', 'border-gray-300', 'rounded-lg', 'focus:outline-none', 'focus:ring-4', 'focus:ring-indigo-500', 'focus:border-transparent', 'text-base', 'md:text-lg', 'mb-4', 'shadow-sm');
                 inputField.placeholder = 'Type your answer here...';
-                inputField.setAttribute('aria-label', 'Type your answer');
                 optionsContainer.appendChild(inputField);
 
                 const submitButton = document.createElement('button');
@@ -1032,7 +984,6 @@
                 submitButton.textContent = 'Submit Answer';
                 submitButton.classList.add('w-full', 'bg-blue-500', 'text-white', 'py-2', 'md:py-3', 'px-6', 'rounded-lg', 'text-base', 'md:text-lg', 'font-semibold', 'hover:bg-blue-600', 'transition', 'duration-300', 'ease-in-out', 'shadow-md', 'transform', 'hover:scale-105');
                 submitButton.onclick = () => handleAnswer(inputField.value.trim(), submitButton);
-                submitButton.setAttribute('aria-label', 'Submit direct answer');
                 optionsContainer.appendChild(submitButton);
 
                 inputField.addEventListener('keypress', (e) => {
@@ -1051,9 +1002,6 @@
                     'cursor-pointer'
                 );
                 trueButton.onclick = () => handleAnswer('True', trueButton);
-                trueButton.setAttribute('role', 'radio');
-                trueButton.setAttribute('aria-checked', 'false');
-                trueButton.setAttribute('aria-label', 'Answer True');
                 optionsContainer.appendChild(trueButton);
 
                 const falseButton = document.createElement('button');
@@ -1065,9 +1013,6 @@
                     'cursor-pointer'
                 );
                 falseButton.onclick = () => handleAnswer('False', falseButton);
-                falseButton.setAttribute('role', 'radio');
-                falseButton.setAttribute('aria-checked', 'false');
-                falseButton.setAttribute('aria-label', 'Answer False');
                 optionsContainer.appendChild(falseButton);
 
             } else { // Multiple choice
@@ -1081,9 +1026,6 @@
                         'cursor-pointer'
                     );
                     button.onclick = () => handleAnswer(option, button);
-                    button.setAttribute('role', 'radio');
-                    button.setAttribute('aria-checked', 'false');
-                    button.setAttribute('aria-label', `Option ${String.fromCharCode(65 + index)}: ${option}`);
                     optionsContainer.appendChild(button);
                 });
             }
@@ -1125,7 +1067,6 @@
                     button.disabled = true;
                     button.classList.remove('cursor-pointer');
                     button.classList.add('cursor-not-allowed');
-                    button.setAttribute('aria-checked', (button.textContent === answerProvided).toString()); // Update aria-checked
                     if (button.textContent === currentQuestion.correctAnswer) {
                         button.classList.remove('bg-gray-100', 'hover:bg-gray-200', 'text-gray-800');
                         button.classList.add('bg-green-500', 'text-white', 'shadow-md');
@@ -1141,7 +1082,6 @@
                     button.disabled = true;
                     button.classList.remove('cursor-pointer');
                     button.classList.add('cursor-not-allowed');
-                    button.setAttribute('aria-checked', (button.textContent === answerProvided).toString()); // Update aria-checked
                     if (button.textContent === currentQuestion.correctAnswer) {
                         button.classList.remove('bg-gray-100', 'hover:bg-gray-200', 'text-gray-800');
                         button.classList.add('bg-green-500', 'text-white', 'shadow-md');
@@ -1283,14 +1223,7 @@
             const payload = {
                 contents: [{ role: "user", parts: [{ text: prompt }] }]
             };
-
-            // Please don't steal this.Because it is free tier API KEY.
-        // You can also get one for free in Google AI studio.
-        // if you see this please this don't make it public.
-        // don't post about this on social media.please!
-        // mahidhartatipakala@gmail.com
-        // I can't afford backend.please!
-            const apiKey = "AIzaSyBl5fGiL7eb8zvrZexCdO1oPVwtTQVm8L8"; // Updated API Key
+            const apiKey = "AIzaSyDdS6Djy4akybiUahN29seSf56jPNl-I-4";
             const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
 
             try {
@@ -1327,7 +1260,7 @@
             const payload = {
                 contents: [{ role: "user", parts: [{ text: prompt }] }]
             };
-            const apiKey = "AIzaSyBl5fGiL7eb8zvrZexCdO1oPVwtTQVm8L8"; // Updated API Key
+            const apiKey = "AIzaSyDdS6Djy4akybiUahN29seSf56jPNl-I-4";
             const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
 
             try {
