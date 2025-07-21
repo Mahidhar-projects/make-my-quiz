@@ -225,7 +225,13 @@
                 <p id="question-counter" class="text-base md:text-lg text-gray-600 font-medium">Question 1 of 5</p>
                 <p id="score-display" class="text-base md:text-lg text-gray-600 font-medium">Score: 0</p>
             </div>
-            <h2 id="question-text" class="text-xl md:text-2xl font-bold text-gray-800 mb-6 leading-relaxed"></h2>
+            <div class="flex items-center justify-between mb-6">
+                <h2 id="question-text" class="text-xl md:text-2xl font-bold text-gray-800 leading-relaxed mr-3"></h2>
+                <!-- Speaker button added here -->
+                <button id="speak-question-button" class="text-gray-600 hover:text-indigo-600 transition-colors duration-200 text-2xl ml-auto" aria-label="Listen to question and options">
+                    🔊
+                </button>
+            </div>
             <div id="options-container" class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                 </div>
 
@@ -401,6 +407,9 @@
         const confirmPdfNoButton = document.getElementById('confirm-pdf-no');
         const confirmPdfCancelButton = document.getElementById('confirm-pdf-cancel');
 
+        // New speaker button element
+        const speakQuestionButton = document.getElementById('speak-question-button');
+
 
         // State variables
         let quizTopic = '';
@@ -473,6 +482,38 @@
             } else {
                 progressBar.style.width = '0%';
             }
+        }
+
+        /**
+         * Reads out the current question and its options using SpeechSynthesis.
+         */
+        function speakQuestionAndOptions() {
+            // Stop any ongoing speech
+            window.speechSynthesis.cancel();
+
+            const currentQuestion = questions[currentQuestionIndex];
+            if (!currentQuestion) return;
+
+            let textToSpeak = `Question: ${currentQuestion.question}. `;
+
+            if (quizType === 'direct-answer') {
+                textToSpeak += 'Please type your answer.';
+            } else if (quizType === 'true-false') {
+                textToSpeak += 'Options: True or False.';
+            } else { // Multiple choice
+                textToSpeak += 'Options: ';
+                currentQuestion.options.forEach((option, index) => {
+                    textToSpeak += `Option ${String.fromCharCode(65 + index)}. ${option}. `;
+                });
+            }
+
+            const utterance = new SpeechSynthesisUtterance(textToSpeak);
+            // You can customize voice, pitch, rate here if needed
+            // utterance.voice = window.speechSynthesis.getVoices().find(voice => voice.name === 'Google US English');
+            // utterance.pitch = 1;
+            // utterance.rate = 1;
+
+            window.speechSynthesis.speak(utterance);
         }
 
         /**
@@ -640,7 +681,7 @@
                 }
             };
 
-            const apiKey = "AIzaSyBl5fGiL7eb8zvrZexCdO1oPVwtTQVm8L8";
+            const apiKey = "AIzaSyBl5fGiL7eb8zvrZexCdO1oPVwtTQVm8L8"; // Updated API Key
             const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
 
             try {
@@ -963,6 +1004,9 @@
 
         // Function to render the current question and its options
         function renderQuestion() {
+            // Stop any ongoing speech when a new question is rendered
+            window.speechSynthesis.cancel();
+
             const currentQuestion = questions[currentQuestionIndex];
             if (!currentQuestion) return;
 
@@ -977,6 +1021,7 @@
                 inputField.id = 'direct-answer-input';
                 inputField.classList.add('w-full', 'p-3', 'md:p-4', 'border-2', 'border-gray-300', 'rounded-lg', 'focus:outline-none', 'focus:ring-4', 'focus:ring-indigo-500', 'focus:border-transparent', 'text-base', 'md:text-lg', 'mb-4', 'shadow-sm');
                 inputField.placeholder = 'Type your answer here...';
+                inputField.setAttribute('aria-label', 'Type your answer');
                 optionsContainer.appendChild(inputField);
 
                 const submitButton = document.createElement('button');
@@ -984,6 +1029,7 @@
                 submitButton.textContent = 'Submit Answer';
                 submitButton.classList.add('w-full', 'bg-blue-500', 'text-white', 'py-2', 'md:py-3', 'px-6', 'rounded-lg', 'text-base', 'md:text-lg', 'font-semibold', 'hover:bg-blue-600', 'transition', 'duration-300', 'ease-in-out', 'shadow-md', 'transform', 'hover:scale-105');
                 submitButton.onclick = () => handleAnswer(inputField.value.trim(), submitButton);
+                submitButton.setAttribute('aria-label', 'Submit direct answer');
                 optionsContainer.appendChild(submitButton);
 
                 inputField.addEventListener('keypress', (e) => {
@@ -1002,6 +1048,9 @@
                     'cursor-pointer'
                 );
                 trueButton.onclick = () => handleAnswer('True', trueButton);
+                trueButton.setAttribute('role', 'radio');
+                trueButton.setAttribute('aria-checked', 'false');
+                trueButton.setAttribute('aria-label', 'Answer True');
                 optionsContainer.appendChild(trueButton);
 
                 const falseButton = document.createElement('button');
@@ -1013,6 +1062,9 @@
                     'cursor-pointer'
                 );
                 falseButton.onclick = () => handleAnswer('False', falseButton);
+                falseButton.setAttribute('role', 'radio');
+                falseButton.setAttribute('aria-checked', 'false');
+                falseButton.setAttribute('aria-label', 'Answer False');
                 optionsContainer.appendChild(falseButton);
 
             } else { // Multiple choice
@@ -1026,6 +1078,9 @@
                         'cursor-pointer'
                     );
                     button.onclick = () => handleAnswer(option, button);
+                    button.setAttribute('role', 'radio');
+                    button.setAttribute('aria-checked', 'false');
+                    button.setAttribute('aria-label', `Option ${String.fromCharCode(65 + index)}: ${option}`);
                     optionsContainer.appendChild(button);
                 });
             }
@@ -1041,6 +1096,9 @@
 
         // Function to handle user's answer selection
         function handleAnswer(answerProvided, clickedElement) {
+            // Stop any ongoing speech when an answer is selected
+            window.speechSynthesis.cancel();
+
             if (selectedOption !== null) return;
 
             selectedOption = answerProvided;
@@ -1067,6 +1125,7 @@
                     button.disabled = true;
                     button.classList.remove('cursor-pointer');
                     button.classList.add('cursor-not-allowed');
+                    button.setAttribute('aria-checked', (button.textContent === answerProvided).toString()); // Update aria-checked
                     if (button.textContent === currentQuestion.correctAnswer) {
                         button.classList.remove('bg-gray-100', 'hover:bg-gray-200', 'text-gray-800');
                         button.classList.add('bg-green-500', 'text-white', 'shadow-md');
@@ -1082,6 +1141,7 @@
                     button.disabled = true;
                     button.classList.remove('cursor-pointer');
                     button.classList.add('cursor-not-allowed');
+                    button.setAttribute('aria-checked', (button.textContent === answerProvided).toString()); // Update aria-checked
                     if (button.textContent === currentQuestion.correctAnswer) {
                         button.classList.remove('bg-gray-100', 'hover:bg-gray-200', 'text-gray-800');
                         button.classList.add('bg-green-500', 'text-white', 'shadow-md');
@@ -1132,6 +1192,9 @@
 
         // Function to move to the next question or finish the quiz
         function handleNextQuestion() {
+            // Stop any ongoing speech when moving to the next question
+            window.speechSynthesis.cancel();
+
             if (currentQuestionIndex < questions.length - 1) {
                 currentQuestionIndex++;
                 renderQuestion();
@@ -1145,6 +1208,9 @@
 
         // Function to start a new quiz (resets all states)
         function startNewQuiz() {
+            // Stop any ongoing speech when starting a new quiz
+            window.speechSynthesis.cancel();
+
             quizTopicInput.value = '';
             imageUploadInput.value = '';
             uploadedImageBase64 = null;
@@ -1223,7 +1289,7 @@
             const payload = {
                 contents: [{ role: "user", parts: [{ text: prompt }] }]
             };
-            const apiKey = "AIzaSyDdS6Djy4akybiUahN29seSf56jPNl-I-4";
+            const apiKey = "AIzaSyBl5fGiL7eb8zvrZexCdO1oPVwtTQVm8L8"; // Updated API Key
             const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
 
             try {
@@ -1260,7 +1326,7 @@
             const payload = {
                 contents: [{ role: "user", parts: [{ text: prompt }] }]
             };
-            const apiKey = "AIzaSyDdS6Djy4akybiUahN29seSf56jPNl-I-4";
+            const apiKey = "AIzaSyBl5fGiL7eb8zvrZexCdO1oPVwtTQVm8L8"; // Updated API Key
             const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
 
             try {
@@ -1312,6 +1378,7 @@
         backToNewQuizButton.addEventListener('click', startNewQuiz);
         explainAnswerButton.addEventListener('click', getExplanation);
         getFunFactButton.addEventListener('click', getFunFact);
+        speakQuestionButton.addEventListener('click', speakQuestionAndOptions); // New event listener for speaker button
 
         // Sound toggle event listener
         soundToggle.addEventListener('change', (event) => {
